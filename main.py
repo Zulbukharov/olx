@@ -1,8 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
 import csv
-import sel
+import phone_parse
 import os
+from PIL import Image
+from io import BytesIO
 
 def write_csv(data):
     with open('olx.csv', 'a') as f:
@@ -25,20 +27,39 @@ def get_page_info(url):
         'price': '',
         'city': '',
         'phone': '',
-        'url': ''
+        'url': '',
     }
     soup = BeautifulSoup(get_html(url), 'lxml')
     offers = soup.find_all('td', class_='offer')
     for i in offers:
+        # try:
+        #     print(i.find('a').find('img'))
+        #     response = requests.get(i.find('a').find('img').get('src'))
+        #     img = Image.open(BytesIO(response.content))
+        #     del img
+        # except:
+        #     print('none')
         try:
             data['title'] = i.find('h3').find('strong').text.strip()
-            data['price'] = i.find('p', class_='price').text.strip()
-            data['city'] = i.find('td', valign='bottom').find('span').text.strip()
-            data['phone'] = sel.start((i.find('h3').find('a').get('href')))
-            data['url'] = i.find('h3').find('a').get('href')
-            write_csv(data)
         except:
-            print('[noneType]')
+            data['title'] = 'None'
+        try:
+            data['price'] = i.find('p', class_='price').text.strip()
+        except:
+            data['price'] = 'None'
+        try:
+            data['city'] = i.find('td', valign='bottom').find('span').text.strip()
+        except:
+            data['city'] = 'None'
+        try:
+            data['phone'] = phone_parse.start((i.find('h3').find('a').get('href')))
+        except:
+            data['phone'] = 'None'
+        try:
+            data['url'] = i.find('h3').find('a').get('href')
+        except:
+            data['url'] = 'None'
+        write_csv(data)
         os.system("pkill chrome")
         # os.system("some_command < input_file | another_command > output_file")
 
@@ -46,9 +67,9 @@ def main(query):
     url = 'https://www.olx.kz/list/q-' + query
     page = '?page='
     # for i in range(1, get_pages(get_html(url))):
-    for i in range(1, 3):
+    for i in range(2, 4):
         print(url + page + str(i))
         get_page_info(url + page + str(i))
 
 if __name__ == '__main__':
-    main('гуси')
+    main('xiaomi')
